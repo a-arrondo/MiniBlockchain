@@ -31,12 +31,10 @@ def main():
     print(f"Validation: {blockchain.validate_chain()}\n")
     for i, transaction in enumerate(transactions_log):
         print(f"# Transaction {i}")
-        blockchain.pending_transactions.append(
-            Transaction(
-                sender=transaction["sender"],
-                receiver=transaction["receiver"],
-                amount=transaction["amount"]
-            )
+        blockchain.add_transaction(
+            transaction["sender"],
+            transaction["receiver"],
+            transaction["amount"]
         )
         blockchain.create_new_block()
         pprint(blockchain)

@@ -10,8 +10,17 @@ class Transaction:
     sender: str
     receiver: str
     amount: float
+    
+    def __post_init__(self) -> None:
+        if not self.sender.strip():
+            raise ValueError("The sender must not be empty")
 
+        if not self.receiver.strip():
+            raise ValueError("The receiver must not be empty")
 
+        if self.sender != "Blockchain" and self.amount <= 0:
+            raise ValueError("The amount of the transaction must be a positive float")
+        
 @dataclass
 class Block:
     index: int
@@ -24,15 +33,15 @@ class Block:
     
     def __post_init__(self) -> None:
         self.hash = ""
-        self.hash = self.calculate_hash()
-
+        
     def calculate_hash(self) -> str:
-        block_dict = asdict(self)
-        if "hash" in block_dict:
-            del block_dict["hash"]
-        block_str = json.dumps(
-            block_dict, sort_keys=True
-            ).encode()
+        block_str = json.dumps({
+            "index": self.index,
+            "previous_hash": self.previous_hash,
+            "timestamp": self.timestamp,
+            "transactions": [asdict(tx) for tx in self.transactions],
+            "nonce": self.nonce,
+        }, sort_keys=True).encode()
         return hashlib.sha256(block_str).hexdigest()
 
 
@@ -43,45 +52,42 @@ class Blockchain:
     difficulty: int = 4
 
     def __post_init__(self):
-        self.pending_transactions.append(
-            Transaction(
-                "Blockchain",
-                "Genesis",
-                0.0
-            )
+        self.add_transaction(
+            "Blockchain",
+            "Genesis",
+            0.0
         )
         self.create_new_block()
 
     def create_new_block(
             self
-            ) -> Block:
-        transactions = list(self.pending_transactions)
+            ) -> None:
+        pending_list = list(self.pending_transactions)
         
         if not self.chain:
             new_index = 0
-            previous_hash = "0"
+            prev_hash = "0"
         else:
             last_block = self.last_block
             new_index = last_block.index + 1
-            previous_hash = last_block.hash
+            prev_hash = last_block.hash
 
         new_block = Block(
             index=new_index,
-            previous_hash=previous_hash,
-            transactions=transactions
+            previous_hash=prev_hash,
+            transactions=pending_list
         )
 
         self.pending_transactions = []
         self.proof_of_work(new_block)
+        new_block.hash = new_block.calculate_hash()
         self.chain.append(new_block)
 
     def proof_of_work(
             self,
             block: Block
             ) -> None:
-        target = "0" * self.difficulty
-
-        while not block.hash.startswith(target):
+        while not self.valid_pow(block.hash):
             block.nonce += 1
             block.hash = block.calculate_hash()
 
@@ -89,9 +95,17 @@ class Blockchain:
     def last_block(self) -> Block:
         return self.chain[-1]
 
+    def valid_pow(
+            self,
+            hash: str
+            ) -> bool:
+        return hash.startswith("0" * self.difficulty)
+
     def validate_chain(self) -> bool:
         genesis = self.chain[0]
-        if genesis.hash != genesis.calculate_hash():
+        genesis_calculated_hash = genesis.calculate_hash()
+        if (genesis.hash != genesis_calculated_hash or
+            not self.valid_pow(genesis_calculated_hash)):
             return False
 
         for i in range(1, len(self.chain)):
@@ -100,8 +114,21 @@ class Blockchain:
 
             if (cur_block.hash != calculated_hash or
                 cur_block.previous_hash != self.chain[i-1].hash or
-                not calculated_hash.startswith("0" * self.difficulty)):
+                not self.valid_pow(calculated_hash)):
                 return False
                 
         return True
-
+    
+    def add_transaction(
+            self,
+            sender: str,
+            receiver: str,
+            amount: float
+            ) -> None:
+        self.pending_transactions.append(
+            Transaction(
+                sender=sender,
+                receiver=receiver,
+                amount=amount
+            )
+        )
