@@ -1,5 +1,5 @@
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 
 from config import Config
 from domain import Blockchain
@@ -20,8 +20,10 @@ async def get_blockchain_length():
         }
         return result
     except Exception as e:
-        # TODO
-        raise e
+        raise HTTPException(
+            status_code=500,
+            detail=str(e)
+        )
 
 @app.get("/blockchain/history", response_model=HistoryModel)
 async def get_blockchain_history():
@@ -33,8 +35,10 @@ async def get_blockchain_history():
         }
         return result
     except Exception as e:
-        # TODO
-        raise e
+        raise HTTPException(
+            status_code=500,
+            detail=str(e)
+        )
 
 @app.post("/blockchain/append", response_model=TransactionModel)
 async def add_transaction(
@@ -55,7 +59,14 @@ async def add_transaction(
             "receiver": receiver,
             "amount": amount
         }
+    except ValueError as ve:
+        raise HTTPException(
+            status_code=400,
+            detail=str(ve)
+        )
     except Exception as e:
-        #TODO: handle exception correctly
-        raise e
+        raise HTTPException(
+            status_code=500,
+            detail=str(e)
+        )
 
