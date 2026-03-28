@@ -45,12 +45,22 @@ class Block:
         return hashlib.sha256(block_str).hexdigest()
 
 
+@dataclass(frozen=True)
+class Neighbour:
+    ip: str
+    port: int
+
+    @property
+    def url(self):
+        return f"http://{self.ip}:{self.port}"
+
+
 @dataclass
 class Blockchain:
     chain: list[Block] = field(default_factory=list)
     pending_transactions: list[Transaction] = field(default_factory=list)
     difficulty: int = 4
-
+    peers: set[Neighbour] = field(default_factory=set)
     def __post_init__(self):
         self.add_transaction(
             "Blockchain",
@@ -132,3 +142,5 @@ class Blockchain:
                 amount=amount
             )
         )
+
+

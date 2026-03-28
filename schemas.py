@@ -22,4 +22,18 @@ class BlockModel(BaseModel):
 class HistoryModel(StatusModel):
     history: list[BlockModel]
 
+class NeighbourModel(BaseModel):
+    ip: str
+    port: int
 
+    def __hash__(self):
+        return hash((self.ip, self.port))
+
+    def __eq__(self, other):
+        return isinstance(other, NeighbourModel) and \
+            self.ip == other.ip and \
+            self.port == other.port
+
+class PeersModel(BaseModel):
+    n_peers: int
+    peers: list[NeighbourModel]

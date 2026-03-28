@@ -6,7 +6,8 @@ The aim of this proyect is merely educational. This repository does not seek a p
 
 ## Next steps
 This section contains the next features that will be included to the repository:
-- Handling of errors and domain logic fixes
+- Add decentralization to the system
+
 
 ---
 <img src="https://ai-label.org/image-pack/ai-label_banner-assisted-by-ai.svg" align="right" width="125">
