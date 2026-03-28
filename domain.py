@@ -63,9 +63,11 @@ class Blockchain:
     peers: set[Neighbour] = field(default_factory=set)
     def __post_init__(self):
         self.add_transaction(
-            "Blockchain",
-            "Genesis",
-            0.0
+            Transaction(
+                "Blockchain",
+                "Genesis",
+                0.0
+            )
         )
         self.create_new_block()
 
@@ -131,16 +133,16 @@ class Blockchain:
     
     def add_transaction(
             self,
-            sender: str,
-            receiver: str,
-            amount: float
+            transaction: Transaction) -> None:
+        self.pending_transactions.append(transaction)
+
+    def add_neighbours(
+            self,
+            neighbours: list[Neighbour]
             ) -> None:
-        self.pending_transactions.append(
-            Transaction(
-                sender=sender,
-                receiver=receiver,
-                amount=amount
-            )
-        )
+        self.peers.update(neighbours)
+
+    def reset_neighbours(self) -> None:
+        self.peers.clear()
 
 
